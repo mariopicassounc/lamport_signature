@@ -30,7 +30,7 @@ import (
 func main() {
 
 	// Define your message
-	textString := "Aguante boca la concha de dios"
+	textString := "good"
 	fmt.Printf("%s\n", textString)
 
 	// convert message into a block
@@ -42,20 +42,22 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	pub.ToHex()
-
+	fmt.Printf("zeropre\n\n")
+	fmt.Println(sec.ZeroPre)
+	fmt.Printf("onepre\n\n")
+	fmt.Println(sec.OnePre)
 	// sign message
 	sig1 := Sign(m, sec)
-	fmt.Printf("sig1:\n%s\n", sig1.ToHex())
+	fmt.Printf("sigpre\n\n")
+	fmt.Println(sig1)
+
+	// verify signature
+	worked := Verify(m, pub, sig1)
+
+	// done
+	fmt.Printf("Verify worked? %v\n", worked)
 
 	/*
-		// verify signature
-		worked := Verify(m, pub, sig1)
-
-		// done
-		fmt.Printf("Verify worked? %v\n", worked)
-
 		// Forge signature
 		msgString, sig, err := Forge()
 		if err != nil {
@@ -223,14 +225,17 @@ func GenerateKey() (SecretKey, PublicKey, error) {
 	var err error
 
 	for i := range sec.ZeroPre {
-		_, err = rand.Read(sec.ZeroPre[i][:])
+
+		// SEE: https://pkg.go.dev/crypto/rand
+
+		_, err = rand.Read(sec.ZeroPre[i][:]) // [:] transfor array in slice to pass as a argument in rand
 		_, err = rand.Read(sec.OnePre[i][:])
 		if err != nil {
 			fmt.Println("error:", err)
 			break
 		}
-		copy(pub.ZeroHash[i][:], sec.ZeroPre[i][:])
-		copy(pub.OneHash[i][:], sec.OnePre[i][:])
+		pub.ZeroHash[i] = BlockFromByteSlice(sec.ZeroPre[i][:])
+		pub.OneHash[i] = BlockFromByteSlice(sec.OnePre[i][:])
 		pub.ZeroHash[i].Hash()
 		pub.OneHash[i].Hash()
 	}
@@ -241,7 +246,6 @@ func GenerateKey() (SecretKey, PublicKey, error) {
 // Sign takes a message and secret key, and returns a signature.
 func Sign(msg Message, sec SecretKey) Signature {
 	var sig Signature
-	fmt.Printf("\n\n")
 	for i := range msg {
 		for j := 7; j >= 0; j-- {
 			k := i*8 + (7 - j) // calculate index for signature: i'th byte * 8 + (7-j) bit
@@ -252,13 +256,26 @@ func Sign(msg Message, sec SecretKey) Signature {
 			}
 		}
 	}
-	fmt.Printf("\n\n")
 	return sig
 }
 
 // Verify takes a message, public key and signature, and returns a boolean
 // describing the validity of the signature.
 func Verify(msg Message, pub PublicKey, sig Signature) bool {
-
-	return true
+	b := true
+	for i := range msg {
+		for j := 7; j >= 0; j-- {
+			k := i*8 + (7 - j) // calculate index
+			if msg[i]&(1<<j) != 0 {
+				if !sig.Preimage[k].IsPreimage(pub.OneHash[k]) {
+					b = false
+				}
+			} else {
+				if !sig.Preimage[k].IsPreimage(pub.ZeroHash[k]) {
+					b = false
+				}
+			}
+		}
+	}
+	return b
 }
