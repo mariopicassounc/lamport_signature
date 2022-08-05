@@ -51,6 +51,7 @@ func main() {
 	fmt.Printf("sigpre\n\n")
 	fmt.Println(sig1)
 
+	fmt.Println(sec.OnePre[2].IsPreimage(pub.OneHash[2]))
 	// verify signature
 	worked := Verify(m, pub, sig1)
 
@@ -149,9 +150,8 @@ func (self Block) Hash() Block {
 	return sha256.Sum256(self[:])
 }
 
-// IsPreimage returns true if the block is a preimage of the argument.
-// For example, if Y = hash(X), then X.IsPreimage(Y) will return true,
-// and Y.IsPreimage(X) will return false.
+// Y = hash(X), then X.IsPreimage(Y) will return true,
+
 func (self Block) IsPreimage(arg Block) bool {
 	return self.Hash() == arg
 }
@@ -234,10 +234,8 @@ func GenerateKey() (SecretKey, PublicKey, error) {
 			fmt.Println("error:", err)
 			break
 		}
-		pub.ZeroHash[i] = BlockFromByteSlice(sec.ZeroPre[i][:])
-		pub.OneHash[i] = BlockFromByteSlice(sec.OnePre[i][:])
-		pub.ZeroHash[i].Hash()
-		pub.OneHash[i].Hash()
+		pub.ZeroHash[i] = (BlockFromByteSlice(sec.ZeroPre[i][:])).Hash()
+		pub.OneHash[i] = (BlockFromByteSlice(sec.OnePre[i][:])).Hash()
 	}
 
 	return sec, pub, err
