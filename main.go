@@ -125,10 +125,10 @@ func HexToPubkey(s string) (PublicKey, error) {
 	// we already checked the length of the hex string so don't need to re-check
 	buf := bytes.NewBuffer(bts)
 
-	for i, _ := range p.ZeroHash {
+	for i := range p.ZeroHash {
 		p.ZeroHash[i] = BlockFromByteSlice(buf.Next(32))
 	}
-	for i, _ := range p.OneHash {
+	for i := range p.OneHash {
 		p.OneHash[i] = BlockFromByteSlice(buf.Next(32))
 	}
 
@@ -202,7 +202,7 @@ func HexToSignature(s string) (Signature, error) {
 	// we already checked the length of the hex string so don't need to re-check
 	buf := bytes.NewBuffer(bts)
 
-	for i, _ := range sig.Preimage {
+	for i := range sig.Preimage {
 		sig.Preimage[i] = BlockFromByteSlice(buf.Next(32))
 	}
 	return sig, nil
